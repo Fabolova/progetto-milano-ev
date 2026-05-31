@@ -6,8 +6,8 @@ import logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(message)s')
 
 class CustomPoiImporter:
-    def __init__(self, uri="bolt://localhost:7687", auth=("neo4j", "bicoccami")):
-        self.driver = GraphDatabase.driver(uri, auth=auth)
+    def __init__(self):
+        self.driver = GraphDatabase.driver(config.NEO4J_URI, auth=(config.NEO4J_USER, config.NEO4J_PASSWORD))
         self.mongo_client = database.get_db_client()
         self.mongo_db = self.mongo_client[config.DB_NAME]
 
