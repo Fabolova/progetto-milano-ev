@@ -30,8 +30,8 @@ def pipeline_meteo_completa():
     params = {
         "latitude": config.MILANO_LAT,
         "longitude": config.MILANO_LON,
-        "start_date": "2023-01-01",
-        "end_date": "2023-12-31",
+        "start_date": "2025-01-01",
+        "end_date": "2025-12-31",
         "hourly": "temperature_2m,precipitation,cloud_cover",
         "timezone": "GMT"  # Manteniamo la correzione UTC
     }

@@ -4,14 +4,14 @@ import config
 print("🔍 Avvio Micro-Test API OpenChargeMap...")
 
 headers = {
-    "User-Agent": "Milano_EV_University_Project/3.0",
+    **config.HEADERS,
     "X-API-Key": config.API_KEY
 }
 
 params = {
     "output": "json",
-    "latitude": 45.4642,
-    "longitude": 9.1900,
+    "latitude": config.MILANO_LAT,
+    "longitude": config.MILANO_LON,
     "distance": 1,        # Solo 1 km
     "maxresults": 2       # Chiediamo SOLO 2 colonnine!
 }
