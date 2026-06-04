@@ -27,7 +27,8 @@ class GraphStepOne:
         
         // 2. Crea o aggiorna il Nodo Colonnina
         MERGE (c:Colonnina {id_colonnina: $id_colonnina})
-        SET c.indirizzo = $indirizzo, c.tecnologia = $corrente
+        SET c.indirizzo = $indirizzo, c.tecnologia = $corrente, c.operatore = $operatore,
+            c.numero_col = $numero_col, c.numero_pdr = $numero_pdr
         
         // 3. Crea la prima relazione spaziale
         MERGE (c)-[:POSIZIONATA_IN]->(q)
@@ -42,7 +43,10 @@ class GraphStepOne:
                     densita=s.get('densita_ab_km2', 0),
                     id_colonnina=str(s.get('_id')),
                     indirizzo=s.get('details', {}).get('localita', 'Indirizzo Sconosciuto'),
-                    corrente=s.get('tipo_corrente', 'AC')
+                    corrente=s.get('tipo_corrente', 'AC'),
+                    operatore=s.get('details', {}).get('titolare', 'Sconosciuto'),
+                    numero_col=s.get('numero_col', 1),
+                    numero_pdr=s.get('numero_pdr', 1)
                 )
             logging.info("✅ PASSO 1 COMPLETATO: Nodi strutturali e relazioni geografiche inseriti.")
 

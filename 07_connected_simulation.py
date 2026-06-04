@@ -12,8 +12,9 @@ class StationState:
     IDLE = "IDLE"
 
 class ChargingPoint:
-    def __init__(self, db_document, parametri_eco):
+    def __init__(self, db_document, parametri_eco, presa_index=0):
         self.id = str(db_document.get('_id'))
+        self.presa_index = presa_index  # Indice della presa (0-based) all'interno della stazione
         self.nil_id = db_document.get('id_nil', 0)
         self.is_dc = (db_document.get('tipo_corrente', 'AC') == 'DC')
         self.max_power_kw = 50.0 if self.is_dc else 22.0
@@ -22,6 +23,7 @@ class ChargingPoint:
         # --- ENRICHMENT: Estraiamo i nomi descrittivi dal documento di MongoDB ---
         self.nil_nome = db_document.get('nome_nil', 'Quartiere Sconosciuto')
         self.nome_colonnina = db_document.get('details', {}).get('localita', 'Indirizzo Sconosciuto')
+        self.numero_pdr = db_document.get('numero_pdr', 1)
         
         # Assegnazione Probabilità Base basata sul quartiere (NIL)
         if self.nil_id <= 9:      
@@ -74,9 +76,11 @@ class ChargingPoint:
                 # --- ENRICHMENT NEI LOG DI RICARICA ---
                 log_entry = {
                     "id_colonnina": self.id,
-                    "nome_colonnina": self.nome_colonnina,  # <--- NUOVO CAMPO
+                    "presa_index": self.presa_index,         # Identifica la presa specifica
+                    "numero_pdr": self.numero_pdr,           # Prese totali della stazione
+                    "nome_colonnina": self.nome_colonnina,
                     "id_nil": self.nil_id,
-                    "nome_nil": self.nil_nome,              # <--- NUOVO CAMPO
+                    "nome_nil": self.nil_nome,
                     "tipo_evento": "CHARGING",
                     "timestamp_inizio": self.session_start,
                     "timestamp_fine": current_time,
@@ -103,9 +107,11 @@ class ChargingPoint:
                 # --- ENRICHMENT NEI LOG DI SOSTA ABUSIVA (IDLE) ---
                 log_entry = {
                     "id_colonnina": self.id,
-                    "nome_colonnina": self.nome_colonnina,  # <--- NUOVO CAMPO
+                    "presa_index": self.presa_index,         # Identifica la presa specifica
+                    "numero_pdr": self.numero_pdr,           # Prese totali della stazione
+                    "nome_colonnina": self.nome_colonnina,
                     "id_nil": self.nil_id,
-                    "nome_nil": self.nil_nome,              # <--- NUOVO CAMPO
+                    "nome_nil": self.nil_nome,
                     "tipo_evento": "IDLE",
                     "timestamp_inizio": self.session_start,
                     "timestamp_fine": current_time,
@@ -130,7 +136,12 @@ class AnnualSimulationEngine:
         stazioni_db = list(self.db['stations_registry'].find({
             "details.titolare": {"$regex": "A2A Energy Solutions", "$options": "i"}
         }))
-        self.stations = [ChargingPoint(doc, self.eco_params) for doc in stazioni_db]
+        # Crea un ChargingPoint per ogni presa (numero_pdr) della stazione
+        self.stations = []
+        for doc in stazioni_db:
+            n_pdr = doc.get('numero_pdr', 1)
+            for i in range(n_pdr):
+                self.stations.append(ChargingPoint(doc, self.eco_params, presa_index=i))
         
         logging.info(f"✅ Setup completato. Caricate in memoria {len(self.stations)} colonnine A2A sparse su tutta Milano.")
         

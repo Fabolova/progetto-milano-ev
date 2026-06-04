@@ -69,6 +69,9 @@ def load_infrastructure_geodata():
                 "id_nil": nil_val,
                 "nome_nil": str(row.get('nome_nil', 'Sconosciuto')),
                 "densita_ab_km2": 0.0,  # Spazio allocato per lo script 03
+                # ---- DATI INFRASTRUTTURALI ----
+                "numero_col": int(row.get('numero_col', 1)),  # Colonnine fisiche nel punto
+                "numero_pdr": int(row.get('numero_pdr', 1)),  # Prese di ricarica totali
                 # --------------------------------------------------------
                 "created_at": datetime.now(timezone.utc)
             }

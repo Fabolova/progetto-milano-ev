@@ -28,10 +28,11 @@ class SupermercatiImporter:
         cypher_query = """
         // 1. Crea il nodo del Supermercato (GDO)
         MERGE (p:POI {id_struttura: $codice})
-        ON CREATE SET 
+        SET 
             p.nome = $nome, 
             p.tipo = "Supermercato",
             p.settore = $settore,
+            p.indirizzo = $indirizzo,
             p.location = point({longitude: $lon, latitude: $lat})
         
         WITH p
@@ -69,12 +70,19 @@ class SupermercatiImporter:
                 nome_struttura = insegna if insegna else f"GDO - {ubicazione}"
                 
                 codice = props.get('Codice', str(coords[0]))
-                settore = props.get('settore_merceologico', 'Sconosciuto')
+                settore = str(props.get('settore_merceologico', 'Sconosciuto')).lower()
+
+                # --- FILTRO SUPERMERCATI REALI ---
+                # Importiamo solo se vende alimentari. 
+                # Scartiamo mobili (solo 'non alimentare'), farmacie, e benzinai.
+                if 'alimentare' not in settore or settore == 'non alimentare':
+                    continue
 
                 session.run(cypher_query,
                     codice=codice,
                     nome=nome_struttura,
-                    settore=settore,
+                    settore=settore.title(),
+                    indirizzo=ubicazione,
                     lon=coords[0],
                     lat=coords[1]
                 )
